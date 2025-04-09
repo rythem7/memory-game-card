@@ -1,5 +1,5 @@
+import { useEffect, useState, useCallback } from 'react';
 import './App.css';
-import { useEffect, useState } from 'react';
 import { themeChange } from 'theme-change';
 // import NavBar from './components/Navbar';
 import ThemeSwitcher from './assets/ThemeSwitcher';
@@ -22,31 +22,34 @@ function App() {
 
   // { id: 1, name: 'Ace of Spades', image: aceOfSpades, active: false }
 
-  function handleClick(index) {
+  const handleClick = useCallback((index) => {
     if (disableClicks || flipped.includes(index) || matchedCards.includes(index)) return;
     // 👆 Prevents clicking on already flipped or matched cards
     
     const newFlipped = [...flipped, index];
     setFlipped(newFlipped);
+    // console.log(newFlipped);
     // 👆 Adds the clicked card to the flipped array  
     
     if (newFlipped.length === 2) {
       setDisableClicks(true);
-      // 👆 Prevents clicking on other cards while two are flipped
-      setTimeout(() => {
-      const firstCard = newCards[newFlipped[0]];
-      const secondCard = newCards[newFlipped[1]];
-      if (firstCard.id === secondCard.id) {
-        setMatchedCards([...matchedCards, firstCard.id, secondCard.id]);
-        setFlipped([]);
-      }
+      const checkMatch = () => {
+        const firstCard = newCards[newFlipped[0]];
+        const secondCard = newCards[newFlipped[1]];
+        if (firstCard.id === secondCard.id) {
+          setMatchedCards([...matchedCards, firstCard.id, secondCard.id]);
+          setFlipped([]);
+          console.log(matchedCards);
+        }
         setFlipped([]);
         setDisableClicks(false);
-      }, 1000);
+      };
+      requestAnimationFrame(() => setTimeout(checkMatch, 1000));
     };    
-  };
+  }, [disableClicks, flipped, matchedCards, newCards]);
 
-  function refreshCards() {
+  const refreshCards = useCallback(() => {
+    setNewCards([]);
     const shuffledCards = shuffleArray(cards).slice(0, 6); // Picked first 6 cards from shuffled array
     const chosenCards2 = shuffleArray(shuffledCards);
     const chosenCards3 = shuffleArray(shuffledCards);
@@ -56,9 +59,7 @@ function App() {
     // chosenCards3 = [];
     setFlipped([]);
     setMatchedCards([]);
-  };
-
-  
+  }, []);
 
   return(
     <div className='flex flex-col w-screen min-h-screen justify-evenly'>
@@ -70,10 +71,10 @@ function App() {
         )}
         {newCards.length !== 0 && <h2 className="text-2xl text-center font-bold mt-4">{matchedCards.length/2} / {newCards.length/2} matched</h2>}
         
-
-        <div className="inline-grid grid-cols-4 grid-rows-3 gap-4 max-w-[70vw] max-h-[90vh] mx-auto  mt-4">
+        <div className={`max-w-[70vw] max-h-[90vh] mt-4 text-center self-center ${newCards.length === 0 ? "hidden" : ""}`}>
+        <div className="inline-grid grid-cols-4 grid-rows-3 gap-4">
           {newCards && newCards.map((card, index) => (
-            <div key={index} id={card.id} onClick={() => handleClick(index)} className={`swap swap-flip ${flipped.includes(index) || matchedCards.includes(card.id) ? "swap-active" : null}`}>
+            <div key={index} onClick={() => handleClick(index)} className={`swap swap-flip ${matchedCards.includes(card.id) ? 'pointer-events-none' : ''} ${flipped.includes(index) || matchedCards.includes(card.id) ? "swap-active" : null}`}>
               <div className="bg-transparent aspect-auto h-[15rem] swap-on">
                 <Image src={card.image} />
               </div>
@@ -83,8 +84,8 @@ function App() {
             </div>
           ))}
         </div>
-
-        {newCards.length !== 0 && <h2 className="text-2xl text-center font-bold mt-4">{flipped.length} flipped</h2>}        
+        </div>
+        {/* {newCards.length !== 0 && <h2 className="text-2xl text-center font-bold mt-4">{flipped.length} flipped</h2>}         */}
         <button onClick={refreshCards} className="btn btn-primary mt-4 btn-wide self-center">
           {newCards.length === 0 ? "Play!" : "Play Again!"}
         </button>
