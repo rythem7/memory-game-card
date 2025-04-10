@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback} from 'react';
 import './App.css';
 import { themeChange } from 'theme-change';
 // import NavBar from './components/Navbar';
@@ -22,44 +22,41 @@ function App() {
 
   // { id: 1, name: 'Ace of Spades', image: aceOfSpades, active: false }
 
+  const checkMatch = (flippedCards, cards, matched) => {
+    const firstCard = cards[flippedCards[0]];
+    const secondCard = cards[flippedCards[1]];
+    if (firstCard.id === secondCard.id) {
+      setMatchedCards([...matched, firstCard.id, secondCard.id]);
+      setFlipped([]);
+      // console.log(`Matched cards: ${[...matched, firstCard.id, secondCard.id]}`);
+    }
+    setFlipped([]);
+    setDisableClicks(false);
+  };
+
   const handleClick = useCallback((index) => {
     if (disableClicks || flipped.includes(index) || matchedCards.includes(index)) return;
     // 👆 Prevents clicking on already flipped or matched cards
-    
+  
     const newFlipped = [...flipped, index];
     setFlipped(newFlipped);
-    // console.log(newFlipped);
     // 👆 Adds the clicked card to the flipped array  
-    
+  
     if (newFlipped.length === 2) {
       setDisableClicks(true);
-      const checkMatch = () => {
-        const firstCard = newCards[newFlipped[0]];
-        const secondCard = newCards[newFlipped[1]];
-        if (firstCard.id === secondCard.id) {
-          setMatchedCards([...matchedCards, firstCard.id, secondCard.id]);
-          setFlipped([]);
-          console.log(matchedCards);
-        }
-        setFlipped([]);
-        setDisableClicks(false);
-      };
-      requestAnimationFrame(() => setTimeout(checkMatch, 1000));
+      requestAnimationFrame(() => setTimeout(() => checkMatch(newFlipped, newCards, matchedCards), 1000));
     };    
   }, [disableClicks, flipped, matchedCards, newCards]);
 
-  const refreshCards = useCallback(() => {
+  const refreshCards = () => {
     setNewCards([]);
-    const shuffledCards = shuffleArray(cards).slice(0, 6); // Picked first 6 cards from shuffled array
+    const shuffledCards = shuffleArray(cards).slice(0, 6);
     const chosenCards2 = shuffleArray(shuffledCards);
     const chosenCards3 = shuffleArray(shuffledCards);
     setNewCards([...chosenCards3, ...chosenCards2]);
-    // shuffledCards = [];
-    // chosenCards2 = [];
-    // chosenCards3 = [];
     setFlipped([]);
     setMatchedCards([]);
-  }, []);
+  };
 
   return(
     <div className='flex flex-col w-screen min-h-screen justify-evenly'>
